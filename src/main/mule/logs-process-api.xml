@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core"
+	xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="c90332e4-5884-4673-91b2-2afc402fb718" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<flow name="logs-process-apiFlow" doc:id="529666a8-0bdc-47c3-a19e-3a9a32837202" >
+		<http:listener doc:name="Listener" doc:id="8ccfb111-49ae-439a-b75a-1c1442ea746e" config-ref="HTTP_Listener_config" path="/process"/>
+		<set-variable value="#[correlationId]" doc:name="Set Variable" doc:id="b55b09a5-3d11-40b0-b4d9-651858f53262" variableName="correlationId"/>
+		<logger level="INFO" doc:name="Logger" doc:id="1ced28f1-0581-4b3b-b7a4-d6dc0abd30c4" message='#[{&#10;	"correlationId": vars.correlationId,&#10;	"message": "flow started for process API",&#10;	"API Name": app.name&#10;}]'/>
+		<http:request doc:name="Request" doc:id="18af8c1d-b7dd-429f-bbac-98d84eee41ee" url="https://logs-system-api-2dvtj5.5sc6y6-4.usa-e2.cloudhub.io/system">
+			<http:query-params ><![CDATA[#[output application/json
+---
+{
+	"correlationId" : vars.correlationId,
+	"errorCode": attributes.queryParams.errorCode default 200
+}]]]></http:query-params>
+		</http:request>
+		<logger level="INFO" doc:name="Logger" doc:id="d46bbcf1-da74-4b14-9ba2-d2350a6f3db9" message='#[{&#10;	"correlationId": vars.correlationId,&#10;	"message": "flow ended for process API",&#10;	"API Name": app.name&#10;}]'/>
+	</flow>
+</mule>
